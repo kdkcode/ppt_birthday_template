@@ -421,7 +421,7 @@ class BirthdaySlideGenerator:
         tf_txt.word_wrap = True
         
         # 부서(파란색)
-        dept = info.get('department','')
+        dept = info.get('department','').strip()  # 부서 앞 공백 제거
         eng_name = info.get('eng_name','')
         kor_name = info.get('name','')
         
@@ -566,10 +566,20 @@ def main():
             image_map[f.name.lower()] = path
         
         df = pd.read_excel(excel_file)  # [name, eng_name, department, birth_month, birth_day]
+        
+        # 문자열 형태의 컬럼 공백 제거
+        for col in ['name', 'eng_name', 'department']:
+            if col in df.columns:
+                df[col] = df[col].astype(str).str.strip()
+        
+        # 선택한 월에 대한 데이터 필터링
         df = df[df['birth_month'] == selected_month]
         if df.empty:
             st.error(f"{selected_month}월 생일자가 없습니다.")
             return
+        
+        # 날짜 정렬 추가 (birth_day 기준 오름차순)
+        df = df.sort_values(by='birth_day')
         
         people_data = []
         for _, row in df.iterrows():
@@ -578,7 +588,7 @@ def main():
             info = {
                 'name': row.get('name',''),
                 'eng_name': e_name,
-                'department': row.get('department',''),
+                'department': row.get('department','').strip(),  # 부서 앞 공백 제거
                 'birth_month': row.get('birth_month',''),
                 'birth_day': row.get('birth_day',''),
                 'image_path': img_path
